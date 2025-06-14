@@ -1,24 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 6ckys AI Chat (Next.js)
+
+A modern, extensible AI chat application built with [Next.js](https://nextjs.org/), React, and Tailwind CSS. It supports multiple AI models (Anthropic Claude, OpenAI GPT, Gemini, Grok, Llama, Deepseek, Perplexity, and more) and provides a sleek, responsive interface for managing conversations.
+
+## Features
+
+- **Multi-model support:** Easily switch between Anthropic, OpenAI, Google Gemini, Grok, Llama, Deepseek, Perplexity, and more.
+- **Persistent chat history:** Conversations are stored locally for seamless continuity.
+- **Sidebar navigation:** Quickly create, select, or delete chats; view usage statistics.
+- **Export chats:** Download conversations as Markdown.
+- **Responsive UI:** Works great on desktop and mobile.
+- **Full-screen mode:** Focus on your conversation.
+- **Modern stack:** Next.js App Router, React 19, Tailwind CSS 4, TypeScript.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 20+
+- npm
+
+### Development
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Production
+
+Build and start the app:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build
+npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Docker
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+You can use Docker for local development or production:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Development:**
+  ```bash
+  docker-compose up nextjs-dev
+  ```
+- **Production:**
+  ```bash
+  docker-compose up nextjs-prod
+  ```
+
+## Project Structure
+
+- `src/app/components/` – UI components (sidebar, chat, input, etc.)
+- `src/app/contexts/` – React context for chat state management
+- `src/app/utils/` – Utility functions (e.g., export to Markdown)
+- `src/app/types/` – TypeScript types
+- `public/` – Static assets (logo, favicon, etc.)
+
+## Customization
+
+- **Model list:** Edit `src/app/components/sidebar/ModelSelector.tsx` to add/remove models.
+- **Branding:** Replace the logo in `public/logo/Logo-AG.png`.
+
+## License
+
+MIT
 
 ## Learn More
 
