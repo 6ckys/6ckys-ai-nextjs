@@ -133,7 +133,7 @@ export function ChatProvider({children}: { children: ReactNode }) {
             id: `chat_${nanoid()}`,
             title: 'New Chat',
             messages: [],
-            model: 'claude-opus-4',
+            model: 'openrouter:anthropic/claude-4-opus-20250522',
             createdAt: Date.now(),
             lastUpdatedAt: Date.now(),
         };

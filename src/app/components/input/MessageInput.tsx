@@ -10,7 +10,7 @@ declare global {
     interface Window {
         puter?: {
             ai: {
-                chat: (content: string, options: {
+                chat: (content: string | Array<{ role: string; content: string }>, options: {
                     model: string;
                     messages: Array<{ role: string; content: string }>;
                     stream: boolean;
@@ -46,7 +46,7 @@ export function MessageInput() {
     const handleSend = async () => {
         if (!message.trim() || isLoading || !activeChat) return;
 
-        const userContent = message.trim();
+        const userMessage = message.trim();
         setMessage('');
         setLoading(true);
 
@@ -57,8 +57,8 @@ export function MessageInput() {
 
         try {
             // Add user message
-            const userMessage = addMessage('user', userContent);
-            if (!userMessage) return;
+            const userMessageObj = addMessage('user', userMessage);
+            if (!userMessageObj) return;
 
             // Add AI message placeholder
             const aiMessage = addMessage('assistant', '', activeChat.model);
@@ -66,31 +66,72 @@ export function MessageInput() {
 
             setStreamingMessageId(aiMessage.id);
 
-            // Prepare message history (excluding the empty AI message we just added)
-            const history = activeChat.messages
-                .slice(0, -1)
-                .map(m => ({role: m.role, content: m.content}));
+            // Prepare message history including all messages up to this point
+            const history = [
+                ...activeChat.messages.map(m => ({role: m.role, content: m.content})),
+                { role: 'user', content: userMessage }
+            ];
 
             // Check if puter is available
             if (!window.puter?.ai?.chat) {
                 throw new Error('Puter AI service is not available');
             }
 
-            // Stream the response
-            const responseStream = await window.puter.ai.chat(userContent, {
-                model: activeChat.model,
-                messages: history,
-                stream: true,
-            });
+            // Stream the response with retry logic
+            const maxRetries = 3;
+            let retryCount = 0;
+            let responseStream: AsyncIterable<{ text?: string }> | undefined;
+
+            while (retryCount < maxRetries) {
+                try {
+                    console.log('Making API call with model:', activeChat.model);
+                    console.log('Message history:', history);
+
+                    // Pass the history array directly as the first parameter
+                    responseStream = await window.puter.ai.chat(history, {
+                        model: activeChat.model,
+                        messages: history,
+                        stream: true,
+                    });
+                    break;
+                } catch (error) {
+                    console.error('API call error:', error);
+                    retryCount++;
+                    if (retryCount < maxRetries) {
+                        console.log(`API call failed, retrying... (${retryCount}/${maxRetries})`);
+                        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+                    } else {
+                        throw error;
+                    }
+                }
+            }
+
+            if (!responseStream) {
+                throw new Error('Failed to establish stream connection');
+            }
 
             let accumulatedContent = '';
+            let lastUpdateTime = Date.now();
+            const updateInterval = 16; // Update UI every 16ms (roughly 60fps)
 
             for await (const part of responseStream) {
                 if (part?.text) {
                     accumulatedContent += part.text;
-                    updateMessage(aiMessage.id, accumulatedContent);
+                    const currentTime = Date.now();
+
+                    // Update message content in state
+                    aiMessage.content = accumulatedContent;
+
+                    // Only update UI if enough time has passed since last update
+                    if (currentTime - lastUpdateTime >= updateInterval) {
+                        updateMessage(aiMessage.id, accumulatedContent);
+                        lastUpdateTime = currentTime;
+                    }
                 }
             }
+
+            // Final update to ensure we have the complete content
+            updateMessage(aiMessage.id, accumulatedContent);
 
         } catch (error) {
             console.error('API Stream Error:', error);
